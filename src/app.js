@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser")
 
 const authRoutes = require("./routes/authRoutes")
 const authMiddleware = require("./middleware/authMiddleware")
+const taskRoutes = require("./routes/taskRoutes")
 
 const app = express()
 
@@ -19,14 +20,6 @@ app.get("/", (req, res) => {
 })
 
 app.use("/api/auth", authRoutes)
-
-app.get("/api/auth/me", authMiddleware, (req, res) => {
-
-    return res.status(200).json({
-        success: true,
-        user: req.user
-    })
-
-})
+app.use("/api/tasks", taskRoutes)
 
 module.exports = app
