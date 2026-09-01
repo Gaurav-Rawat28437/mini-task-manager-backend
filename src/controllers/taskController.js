@@ -122,7 +122,49 @@ const getTasks = async (req, res) => {
     }
 }
 
+const getTaskById = async (req, res) => {
+    try {
+
+        const { id } = req.params
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid task ID"
+            })
+        }
+
+        const task = await Task.findOne({
+            _id: id,
+            userId: req.user._id
+        })
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: "Task not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Task fetched successfully",
+            task
+        })
+
+    } catch (error) {
+
+        console.error("Get task error:", error)
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        })
+    }
+}
+
 module.exports = {
     createTask,
-    getTasks
+    getTasks,
+    getTaskById
 }
