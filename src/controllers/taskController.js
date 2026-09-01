@@ -163,8 +163,142 @@ const getTaskById = async (req, res) => {
     }
 }
 
+const updateTask = async (req, res) => {
+    try {
+
+        const { id } = req.params
+
+        const {
+            title,
+            description,
+            status,
+            priority,
+            dueDate
+        } = req.body
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid task ID"
+            })
+        }
+
+        const task = await Task.findOne({
+            _id: id,
+            userId: req.user._id
+        })
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: "Task not found"
+            })
+        }
+
+        if (title !== undefined) {
+
+            if (
+                !title.trim() ||
+                title.trim().length < 2 ||
+                title.trim().length > 100
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Title must be between 2 and 100 characters"
+                })
+            }
+
+            task.title = title.trim()
+        }
+
+
+        if (description !== undefined) {
+
+            if (
+                !description.trim() ||
+                description.trim().length < 2 ||
+                description.trim().length > 1000
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Description must be between 2 and 1000 characters"
+                })
+            }
+
+            task.description = description.trim()
+        }
+
+        if (status !== undefined) {
+
+            const allowedStatus = [
+                "Pending",
+                "In Progress",
+                "Completed"
+            ]
+
+            if (!allowedStatus.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid status"
+                })
+            }
+
+            task.status = status
+        }
+
+        if (priority !== undefined) {
+
+            const allowedPriority = [
+                "Low",
+                "Medium",
+                "High"
+            ]
+
+            if (!allowedPriority.includes(priority)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid priority"
+                })
+            }
+
+            task.priority = priority
+        }
+
+
+        if (dueDate !== undefined) {
+
+            if (dueDate !== null && !validator.isDate(dueDate)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid due date"
+                })
+            }
+
+            task.dueDate = dueDate
+        }
+
+        await task.save()
+
+        return res.status(200).json({
+            success: true,
+            message: "Task updated successfully",
+            task
+        })
+
+    } catch (error) {
+
+        console.error("Update task error:", error)
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        })
+    }
+}
+
 module.exports = {
     createTask,
     getTasks,
-    getTaskById
+    getTaskById,
+    updateTask
 }
