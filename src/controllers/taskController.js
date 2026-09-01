@@ -99,16 +99,52 @@ const createTask = async (req, res) => {
 const getTasks = async (req, res) => {
     try {
 
+        let { page = 1, limit = 10 } = req.query
+
+        page = Number(page)
+        limit = Number(limit)
+
+        if (page < 1) {
+            page = 1
+        }
+
+        if (limit < 1 || limit > 50) {
+            limit = 10
+        }
+
+        const skip = (page - 1) * limit
+
+        const totalTasks = await Task.countDocuments({
+            userId: req.user._id
+        })
+
         const tasks = await Task.find({
             userId: req.user._id
-        }).sort({
-            createdAt: -1
         })
+            .sort({
+                createdAt: -1
+            })
+            .skip(skip)
+            .limit(limit)
+
+        const totalPages = Math.ceil(
+            totalTasks / limit
+        )
 
         return res.status(200).json({
             success: true,
             message: "Tasks fetched successfully",
-            tasks
+
+            tasks,
+
+            pagination: {
+                currentPage: page,
+                limit,
+                totalTasks,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1
+            }
         })
 
     } catch (error) {
@@ -121,7 +157,6 @@ const getTasks = async (req, res) => {
         })
     }
 }
-
 const getTaskById = async (req, res) => {
     try {
 
