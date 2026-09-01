@@ -99,20 +99,62 @@ const createTask = async (req, res) => {
 const getTasks = async (req, res) => {
     try {
 
-        let { page = 1, limit = 10 } = req.query
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 5
 
-        page = Number(page)
-        limit = Number(limit)
+        const sort = req.query.sort || "newest"
 
-        if (page < 1) {
-            page = 1
-        }
+        const allowedSorts = [
+            "newest",
+            "oldest",
+            "priorityHigh",
+            "priorityLow",
+            "dueDateSoon",
+            "dueDateLate"
+        ]
 
-        if (limit < 1 || limit > 50) {
-            limit = 10
+        if (!allowedSorts.includes(sort)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid sorting option"
+            })
         }
 
         const skip = (page - 1) * limit
+
+        let sortOption = {
+            createdAt: -1
+        }
+
+        if (sort === "oldest") {
+            sortOption = {
+                createdAt: 1
+            }
+        }
+
+        if (sort === "priorityHigh") {
+            sortOption = {
+                priority: -1
+            }
+        }
+
+        if (sort === "priorityLow") {
+            sortOption = {
+                priority: 1
+            }
+        }
+
+        if (sort === "dueDateSoon") {
+            sortOption = {
+                dueDate: 1
+            }
+        }
+
+        if (sort === "dueDateLate") {
+            sortOption = {
+                dueDate: -1
+            }
+        }
 
         const totalTasks = await Task.countDocuments({
             userId: req.user._id
@@ -121,9 +163,7 @@ const getTasks = async (req, res) => {
         const tasks = await Task.find({
             userId: req.user._id
         })
-            .sort({
-                createdAt: -1
-            })
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
 
@@ -134,9 +174,7 @@ const getTasks = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Tasks fetched successfully",
-
             tasks,
-
             pagination: {
                 currentPage: page,
                 limit,
@@ -157,6 +195,9 @@ const getTasks = async (req, res) => {
         })
     }
 }
+
+
+
 const getTaskById = async (req, res) => {
     try {
 
