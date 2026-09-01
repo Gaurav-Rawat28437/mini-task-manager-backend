@@ -96,6 +96,33 @@ const createTask = async (req, res) => {
     }
 }
 
+const getTasks = async (req, res) => {
+    try {
+
+        const tasks = await Task.find({
+            userId: req.user._id
+        }).sort({
+            createdAt: -1
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Tasks fetched successfully",
+            tasks
+        })
+
+    } catch (error) {
+
+        console.error("Get tasks error:", error)
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        })
+    }
+}
+
 module.exports = {
-    createTask
+    createTask,
+    getTasks
 }
