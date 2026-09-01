@@ -15,7 +15,7 @@ const register = async (req, res) => {
             })
         }
 
-        if (name.trim().length<2 || name.trim().length>50) {
+        if (name.trim().length < 2 || name.trim().length > 50) {
             return res.status(400).json({
                 success: false,
                 message: "Name must be between 2 and 50 characters"
@@ -47,10 +47,10 @@ const register = async (req, res) => {
             })
         }
 
-        
+
         const hashedPassword = await bcrypt.hash(password, 10)
 
-       
+
         const user = await User.create({
             name: name.trim(),
             email: email.toLowerCase(),
@@ -127,7 +127,10 @@ const login = async (req, res) => {
             }
         )
 
-        res.cookie("token",token,{
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
